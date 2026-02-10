@@ -1,0 +1,112 @@
+:root {
+    --bg: #0a0a0a;
+    --card: #141414;
+    --gold: #d4af37;
+    --gold-soft: #8a6d3b;
+    --silver: #e0e0e0;
+    --green: #00ff88;
+    --red: #ff4d4d;
+    --text: #a0a0a0;
+}
+
+body {
+    background-color: var(--bg);
+    color: white;
+    font-family: 'Segoe UI', Helvetica, sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--gold-soft);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+}
+
+#clock {
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--text);
+}
+
+.controls {
+    margin-bottom: 25px;
+    display: flex;
+    gap: 10px;
+}
+
+select {
+    background: var(--card);
+    color: var(--gold);
+    border: 1px solid var(--gold-soft);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: var(--card);
+    padding: 30px;
+    border-radius: 4px;
+    border-top: 2px solid var(--gold-soft);
+    position: relative;
+}
+
+.label {
+    color: var(--text);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.price {
+    font-size: 3.5rem;
+    font-weight: bold;
+    font-family: monospace;
+    margin: 15px 0;
+    transition: color 0.3s;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #222;
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+.stat-val {
+    display: block;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
+.high { color: var(--green); }
+.low { color: var(--red); }
+.neutral { color: white; }
