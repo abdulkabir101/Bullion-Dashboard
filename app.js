@@ -16,8 +16,15 @@ async function fetchFX() {
     try {
         const res = await fetch(corsProxy + encodeURIComponent('https://api.exchangerate.host/latest?base=USD&symbols=AED'));
         const data = await res.json();
-        if (data.rates && data.rates.AED) fxRate = data.rates.AED;
-    } catch (e) { console.error("FX update failed"); }
+        if (data.rates && data.rates.AED) {
+            fxRate = data.rates.AED;
+            console.log(`FX Rate (USD to AED): ${fxRate}`);
+        } else {
+            throw new Error('Unable to fetch FX rate');
+        }
+    } catch (e) {
+        console.error("FX update failed", e);
+    }
 }
 
 async function fetchMetals() {
@@ -30,20 +37,26 @@ async function fetchMetals() {
         const gData = await gRes.json();
         const sData = await sRes.json();
 
-        // Data format: [ ["gold", 2034.25] ]
-        prices.gold = gData.contents[0][1];
-        prices.silver = sData.contents[0][1];
+        // Check if the data is structured correctly
+        if (gData.contents && sData.contents) {
+            prices.gold = gData.contents[0][1];
+            prices.silver = sData.contents[0][1];
 
-        // Track session high/low
-        if (prices.gold > prices.goldHigh) prices.goldHigh = prices.gold;
-        if (prices.gold < prices.goldLow) prices.goldLow = prices.gold;
-        if (prices.silver > prices.silverHigh) prices.silverHigh = prices.silver;
-        if (prices.silver < prices.silverLow) prices.silverLow = prices.silver;
+            // Track session high/low
+            if (prices.gold > prices.goldHigh) prices.goldHigh = prices.gold;
+            if (prices.gold < prices.goldLow) prices.goldLow = prices.gold;
+            if (prices.silver > prices.silverHigh) prices.silverHigh = prices.silver;
+            if (prices.silver < prices.silverLow) prices.silverLow = prices.silver;
 
-        document.getElementById('connection-status').innerText = "● LIVE DATA";
-        document.getElementById('connection-status').style.color = "var(--green)";
-        updateDisplay();
+            console.log(`Gold Price: ${prices.gold}, Silver Price: ${prices.silver}`);
+            document.getElementById('connection-status').innerText = "● LIVE DATA";
+            document.getElementById('connection-status').style.color = "var(--green)";
+            updateDisplay();
+        } else {
+            throw new Error('API data format error');
+        }
     } catch (e) {
+        console.error("Error fetching metals data", e);
         document.getElementById('connection-status').innerText = "● OFFLINE (CORS BLOCKED)";
         document.getElementById('connection-status').style.color = "red";
     }
