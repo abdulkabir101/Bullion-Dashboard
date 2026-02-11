@@ -1,108 +1,100 @@
-// Gold API (CORS enabled)
-const API = {
-  gold: "https://api.gold-api.com/price/XAU",
-  silver: "https://api.gold-api.com/price/XAG"
-};
-
+// Unit Conversion Constants
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
-let state = {
+// Initialize variables for unit and currency
+const unit = document.getElementById('unit');  // Get the unit selector
+const currency = document.getElementById('currency');  // Get the currency selector
+
+const state = {
+  fx: 3.6725, // Example: Set default FX rate
   gold: null,
   silver: null,
   goldHigh: -Infinity,
   goldLow: Infinity,
   silverHigh: -Infinity,
-  silverLow: Infinity
+  silverLow: Infinity,
 };
 
-const goldEl = document.getElementById("gold-price");
-const silverEl = document.getElementById("silver-price");
-
-function updateClock() {
-  document.getElementById("clock").innerText =
-    new Date().toLocaleTimeString();
-}
-setInterval(updateClock, 1000);
-updateClock();
-
+// Convert price based on unit and currency
 function convert(value) {
-  const unit = document.getElementById("unit").value;
-  const currency = document.getElementById("currency").value;
-
   let result = value;
 
-  if (unit === "g") result = value / GRAMS_PER_OZ;
-  if (unit === "tola") result = value / TOLA_PER_OZ;
+  // Convert based on selected unit
+  if (unit.value === 'g') result = value / GRAMS_PER_OZ;  // Convert from oz to gram
+  if (unit.value === 'tola') result = value / TOLA_PER_OZ;  // Convert from oz to tola
 
-  // Gold API already returns USD
-  if (currency === "AED") result *= 3.6725;
+  // If currency is AED, convert using the current FX rate
+  if (currency.value === 'AED') result = result * state.fx;
 
-  return result.toFixed(2);
+  return result.toFixed(2);  // Format to 2 decimal places
 }
 
+// Update the UI with the fetched and converted prices
 function updateDisplay() {
-  if (state.gold !== null) {
-    goldEl.innerText = convert(state.gold);
-    document.getElementById("gold-high").innerText = convert(state.goldHigh);
-    document.getElementById("gold-low").innerText = convert(state.goldLow);
-
-    goldEl.className =
-      "price " +
-      (state.gold >= state.goldHigh
-        ? "high"
-        : state.gold <= state.goldLow
-        ? "low"
-        : "neutral");
-  }
-
+  // Update Silver price (XAG)
   if (state.silver !== null) {
-    silverEl.innerText = convert(state.silver);
-    document.getElementById("silver-high").innerText = convert(state.silverHigh);
-    document.getElementById("silver-low").innerText = convert(state.silverLow);
+    document.getElementById('silver-price').textContent = convert(state.silver);
+    document.getElementById('silver-high').textContent = convert(state.silverHigh);
+    document.getElementById('silver-low').textContent = convert(state.silverLow);
+    applyHighLowColor(document.getElementById('silver-price'), state.silver, state.silverHigh, state.silverLow);
+  }
 
-    silverEl.className =
-      "price " +
-      (state.silver >= state.silverHigh
-        ? "high"
-        : state.silver <= state.silverLow
-        ? "low"
-        : "neutral");
+  // Update Gold price (XAU)
+  if (state.gold !== null) {
+    document.getElementById('gold-price').textContent = convert(state.gold);
+    document.getElementById('gold-high').textContent = convert(state.goldHigh);
+    document.getElementById('gold-low').textContent = convert(state.goldLow);
+    applyHighLowColor(document.getElementById('gold-price'), state.gold, state.goldHigh, state.goldLow);
   }
 }
 
+// Apply color changes based on high/low prices
+function applyHighLowColor(priceElement, currentPrice, highPrice, lowPrice) {
+  priceElement.classList.remove('high', 'low', 'neutral');
+
+  if (currentPrice === highPrice) {
+    priceElement.classList.add('high');
+  } else if (currentPrice === lowPrice) {
+    priceElement.classList.add('low');
+  } else {
+    priceElement.classList.add('neutral');
+  }
+}
+
+// Fetch prices from the API
 async function fetchPrices() {
+  const instrument = 'XAG/USD'; // or dynamically change this for XAU/USD
+  const url = `https://bullion-dashboard.vercel.app/api/quote?instrument=${instrument}`;
+
   try {
-    const [goldRes, silverRes] = await Promise.all([
-      fetch(API.gold),
-      fetch(API.silver)
-    ]);
+    const response = await fetch(url);
+    const data = await response.json();
+    const bid = data?.bboQuotes?.[0]?.bid;  // Adjust according to your API structure
+    const ask = data?.bboQuotes?.[0]?.ask;
 
-    const goldData = await goldRes.json();
-    const silverData = await silverRes.json();
+    if (bid && ask) {
+      const mid = (bid + ask) / 2; // Calculate mid price
 
-    state.gold = goldData.price;
-    state.silver = silverData.price;
+      // Update state with the fetched prices
+      if (instrument === 'XAG/USD') {
+        state.silver = mid;
+        state.silverHigh = Math.max(state.silverHigh, mid);
+        state.silverLow = Math.min(state.silverLow, mid);
+      } else if (instrument === 'XAU/USD') {
+        state.gold = mid;
+        state.goldHigh = Math.max(state.goldHigh, mid);
+        state.goldLow = Math.min(state.goldLow, mid);
+      }
 
-    if (state.gold > state.goldHigh) state.goldHigh = state.gold;
-    if (state.gold < state.goldLow) state.goldLow = state.gold;
-
-    if (state.silver > state.silverHigh) state.silverHigh = state.silver;
-    if (state.silver < state.silverLow) state.silverLow = state.silver;
-
-    document.getElementById("connection-status").innerText = "● LIVE DATA";
-    document.getElementById("connection-status").style.color = "#00ff88";
-
-    updateDisplay();
-  } catch (err) {
-    document.getElementById("connection-status").innerText =
-      "● OFFLINE";
-    document.getElementById("connection-status").style.color = "red";
+      // Apply the selected unit conversion
+      updateDisplay();
+    } else {
+      console.error('Invalid bid/ask data');
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
   }
 }
 
-document.getElementById("currency").addEventListener("change", updateDisplay);
-document.getElementById("unit").addEventListener("change", updateDisplay);
-
-setInterval(fetchPrices, 1000);
-fetchPrices();
+setInterval(fetchPrices, 1000); // Fetch prices every 1 second
