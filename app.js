@@ -1,99 +1,108 @@
-// CORS proxy URL
-const corsProxy = 'https://api.allorigins.win/get?url=';
+// Gold API (CORS enabled)
+const API = {
+  gold: "https://api.gold-api.com/price/XAU",
+  silver: "https://api.gold-api.com/price/XAG"
+};
 
-let prices = { gold: 0, silver: 0, goldHigh: 0, goldLow: Infinity, silverHigh: 0, silverLow: Infinity };
-let fxRate = 3.6725;
-
-// Unit Conversion Constants
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
+let state = {
+  gold: null,
+  silver: null,
+  goldHigh: -Infinity,
+  goldLow: Infinity,
+  silverHigh: -Infinity,
+  silverLow: Infinity
+};
+
+const goldEl = document.getElementById("gold-price");
+const silverEl = document.getElementById("silver-price");
+
 function updateClock() {
-    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+  document.getElementById("clock").innerText =
+    new Date().toLocaleTimeString();
 }
+setInterval(updateClock, 1000);
+updateClock();
 
-async function fetchFX() {
-    try {
-        const res = await fetch(corsProxy + encodeURIComponent('https://api.exchangerate.host/latest?base=USD&symbols=AED'));
-        const data = await res.json();
-        if (data.rates && data.rates.AED) {
-            fxRate = data.rates.AED;
-            console.log(`FX Rate (USD to AED): ${fxRate}`);
-        } else {
-            throw new Error('Unable to fetch FX rate');
-        }
-    } catch (e) {
-        console.error("FX update failed", e);
-    }
-}
+function convert(value) {
+  const unit = document.getElementById("unit").value;
+  const currency = document.getElementById("currency").value;
 
-async function fetchMetals() {
-    try {
-        const [gRes, sRes] = await Promise.all([
-            fetch(corsProxy + encodeURIComponent('https://api.metals.live/v1/spot/gold')),
-            fetch(corsProxy + encodeURIComponent('https://api.metals.live/v1/spot/silver'))
-        ]);
-        
-        const gData = await gRes.json();
-        const sData = await sRes.json();
+  let result = value;
 
-        // Check if the data is structured correctly
-        if (gData.contents && sData.contents) {
-            prices.gold = gData.contents[0][1];
-            prices.silver = sData.contents[0][1];
+  if (unit === "g") result = value / GRAMS_PER_OZ;
+  if (unit === "tola") result = value / TOLA_PER_OZ;
 
-            // Track session high/low
-            if (prices.gold > prices.goldHigh) prices.goldHigh = prices.gold;
-            if (prices.gold < prices.goldLow) prices.goldLow = prices.gold;
-            if (prices.silver > prices.silverHigh) prices.silverHigh = prices.silver;
-            if (prices.silver < prices.silverLow) prices.silverLow = prices.silver;
+  // Gold API already returns USD
+  if (currency === "AED") result *= 3.6725;
 
-            console.log(`Gold Price: ${prices.gold}, Silver Price: ${prices.silver}`);
-            document.getElementById('connection-status').innerText = "● LIVE DATA";
-            document.getElementById('connection-status').style.color = "var(--green)";
-            updateDisplay();
-        } else {
-            throw new Error('API data format error');
-        }
-    } catch (e) {
-        console.error("Error fetching metals data", e);
-        document.getElementById('connection-status').innerText = "● OFFLINE (CORS BLOCKED)";
-        document.getElementById('connection-status').style.color = "red";
-    }
-}
-
-function convert(val) {
-    const unit = document.getElementById('unit').value;
-    const curr = document.getElementById('currency').value;
-    let result = val;
-
-    if (unit === 'g') result = val / GRAMS_PER_OZ;
-    if (unit === 'tola') result = val / TOLA_PER_OZ;
-    if (curr === 'AED') result = result * fxRate;
-
-    return result.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return result.toFixed(2);
 }
 
 function updateDisplay() {
-    const gEl = document.getElementById('gold-price');
-    const sEl = document.getElementById('silver-price');
+  if (state.gold !== null) {
+    goldEl.innerText = convert(state.gold);
+    document.getElementById("gold-high").innerText = convert(state.goldHigh);
+    document.getElementById("gold-low").innerText = convert(state.goldLow);
 
-    gEl.innerText = convert(prices.gold);
-    sEl.innerText = convert(prices.silver);
-    
-    document.getElementById('gold-high').innerText = convert(prices.goldHigh);
-    document.getElementById('gold-low').innerText = convert(prices.goldLow);
-    document.getElementById('silver-high').innerText = convert(prices.silverHigh);
-    document.getElementById('silver-low').innerText = convert(prices.silverLow);
+    goldEl.className =
+      "price " +
+      (state.gold >= state.goldHigh
+        ? "high"
+        : state.gold <= state.goldLow
+        ? "low"
+        : "neutral");
+  }
 
-    // Color Logic
-    gEl.className = `price ${prices.gold >= prices.goldHigh ? 'high' : prices.gold <= prices.goldLow ? 'low' : 'neutral'}`;
-    sEl.className = `price ${prices.silver >= prices.silverHigh ? 'high' : prices.silver <= prices.silverLow ? 'low' : 'neutral'}`;
+  if (state.silver !== null) {
+    silverEl.innerText = convert(state.silver);
+    document.getElementById("silver-high").innerText = convert(state.silverHigh);
+    document.getElementById("silver-low").innerText = convert(state.silverLow);
+
+    silverEl.className =
+      "price " +
+      (state.silver >= state.silverHigh
+        ? "high"
+        : state.silver <= state.silverLow
+        ? "low"
+        : "neutral");
+  }
 }
 
-setInterval(updateClock, 1000);
-setInterval(fetchMetals, 1000); 
-setInterval(fetchFX, 3600000); // Update FX hourly
+async function fetchPrices() {
+  try {
+    const [goldRes, silverRes] = await Promise.all([
+      fetch(API.gold),
+      fetch(API.silver)
+    ]);
 
-fetchMetals();
-fetchFX();
+    const goldData = await goldRes.json();
+    const silverData = await silverRes.json();
+
+    state.gold = goldData.price;
+    state.silver = silverData.price;
+
+    if (state.gold > state.goldHigh) state.goldHigh = state.gold;
+    if (state.gold < state.goldLow) state.goldLow = state.gold;
+
+    if (state.silver > state.silverHigh) state.silverHigh = state.silver;
+    if (state.silver < state.silverLow) state.silverLow = state.silver;
+
+    document.getElementById("connection-status").innerText = "● LIVE DATA";
+    document.getElementById("connection-status").style.color = "#00ff88";
+
+    updateDisplay();
+  } catch (err) {
+    document.getElementById("connection-status").innerText =
+      "● OFFLINE";
+    document.getElementById("connection-status").style.color = "red";
+  }
+}
+
+document.getElementById("currency").addEventListener("change", updateDisplay);
+document.getElementById("unit").addEventListener("change", updateDisplay);
+
+setInterval(fetchPrices, 1000);
+fetchPrices();

@@ -1,55 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Bullion Desk</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <title>Professional Bullion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
+
+  <div class="header">
+    <div>
+      <h1>Bullion Desk</h1>
+      <span id="connection-status" class="status neutral">● CONNECTING</span>
+    </div>
+    <div id="clock">00:00:00</div>
+  </div>
+
+  <div class="controls">
+    <select id="currency">
+      <option value="USD">Currency: USD</option>
+      <option value="AED">Currency: AED</option>
+    </select>
+
+    <select id="unit">
+      <option value="oz">Unit: Ounce (oz)</option>
+      <option value="g">Unit: Gram</option>
+      <option value="tola">Unit: Tola</option>
+    </select>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <span class="label">Gold Spot (XAU)</span>
+      <div id="gold-price" class="price neutral">---</div>
+      <div class="stats">
         <div>
-            <h1>Bullion Desk</h1>
-            <span id="connection-status" style="font-size: 0.7rem; color: var(--text);">● LIVE DATA</span>
+          <span class="label">High</span>
+          <span id="gold-high">---</span>
         </div>
-        <div id="clock">00:00:00</div>
+        <div>
+          <span class="label">Low</span>
+          <span id="gold-low">---</span>
+        </div>
+      </div>
     </div>
 
-    <div class="controls">
-        <select id="currency" onchange="updateDisplay()">
-            <option value="USD">Currency: USD</option>
-            <option value="AED">Currency: AED</option>
-        </select>
-        <select id="unit" onchange="updateDisplay()">
-            <option value="oz">Unit: Ounce (oz)</option>
-            <option value="g">Unit: Gram (g)</option>
-            <option value="tola">Unit: Tola</option>
-        </select>
+    <div class="card">
+      <span class="label">Silver Spot (XAG)</span>
+      <div id="silver-price" class="price neutral">---</div>
+      <div class="stats">
+        <div>
+          <span class="label">High</span>
+          <span id="silver-high">---</span>
+        </div>
+        <div>
+          <span class="label">Low</span>
+          <span id="silver-low">---</span>
+        </div>
+      </div>
     </div>
 
-    <div class="grid">
-        <div class="card" id="gold-card">
-            <span class="label">Gold Spot (XAU)</span>
-            <div id="gold-price" class="price neutral">---</div>
-            <div class="stats">
-                <div><span class="label">High</span><span id="gold-high" class="stat-val">---</span></div>
-                <div><span class="label">Low</span><span id="gold-low" class="stat-val">---</span></div>
-            </div>
-        </div>
-
-        <div class="card" id="silver-card" style="border-top-color: #555;">
-            <span class="label">Silver Spot (XAG)</span>
-            <div id="silver-price" class="price neutral">---</div>
-            <div class="stats">
-                <div><span class="label">High</span><span id="silver-high" class="stat-val">---</span></div>
-                <div><span class="label">Low</span><span id="silver-low" class="stat-val">---</span></div>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
+<!-- JavaScript -->
 <script src="app.js"></script>
+
 </body>
 </html>
