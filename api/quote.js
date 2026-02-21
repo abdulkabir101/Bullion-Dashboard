@@ -15,11 +15,38 @@ export default async function handler(req, res) {
 
     const data = await r.json();
 
-    // Allow your GitHub Pages site to read this
+    // Parse and extract the bid and ask from the response
+    const instrumentData = data[0];  // The first object in the response array
+    const spreadProfilePrices = instrumentData.spreadProfilePrices || [];
+
+    if (!spreadProfilePrices.length) {
+      res.status(404).json({ error: "No price data available" });
+      return;
+    }
+
+    // Extract bid and ask values from the first spreadProfilePrices object
+    const { bid, ask } = spreadProfilePrices[0];
+
+    if (bid == null || ask == null) {
+      res.status(404).json({ error: "Missing bid/ask data" });
+      return;
+    }
+
+    const mid = (bid + ask) / 2;
+
+    // Return the parsed data with bid, ask, and mid
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "s-maxage=1, stale-while-revalidate=5");
-    res.status(200).json(data);
+
+    res.status(200).json({
+      mid,
+      bid,
+      ask,
+      timestamp: instrumentData.ts,  // Optional: Add the timestamp
+    });
+
   } catch (e) {
-    res.status(500).json({ error: "Proxy failed" });
+    console.error("Error processing request:", e);
+    res.status(500).json({ error: "Proxy failed", message: e.message });
   }
 }
