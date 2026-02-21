@@ -1,13 +1,10 @@
-// Unit Conversion Constants
+// Unit conversion constants
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
-// Initialize variables for unit and currency
-const unit = document.getElementById('unit');  // Get the unit selector
-const currency = document.getElementById('currency');  // Get the currency selector
-
+// State object to hold data
 const state = {
-  fx: 3.6725, // Example: Set default FX rate
+  fx: 3.6725, // Example: Set default FX rate for AED
   gold: null,
   silver: null,
   goldHigh: -Infinity,
@@ -16,85 +13,146 @@ const state = {
   silverLow: Infinity,
 };
 
-// Convert price based on unit and currency
+// Elements
+const el = {
+  clock: document.getElementById("clock"),
+  status: document.getElementById("connection-status"),
+  lastUpdated: document.getElementById("last-updated"),
+  unit: document.getElementById("unit"),
+
+  goldPrice: document.getElementById("gold-price"),
+  goldHigh: document.getElementById("gold-high"),
+  goldLow: document.getElementById("gold-low"),
+  goldMeta: document.getElementById("gold-meta"),
+
+  silverPrice: document.getElementById("silver-price"),
+  silverHigh: document.getElementById("silver-high"),
+  silverLow: document.getElementById("silver-low"),
+  silverMeta: document.getElementById("silver-meta"),
+};
+
+// Clock Update
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+function updateClock() {
+  const d = new Date();
+  el.clock.textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// Unit Conversion
 function convert(value) {
   let result = value;
 
   // Convert based on selected unit
-  if (unit.value === 'g') result = value / GRAMS_PER_OZ;  // Convert from oz to gram
-  if (unit.value === 'tola') result = value / TOLA_PER_OZ;  // Convert from oz to tola
+  if (el.unit.value === "g") result = value / GRAMS_PER_OZ;
+  else if (el.unit.value === "tola") result = value / TOLA_PER_OZ;
 
   // If currency is AED, convert using the current FX rate
-  if (currency.value === 'AED') result = result * state.fx;
+  if (currency.value === "AED") result = result * state.fx;
 
-  return result.toFixed(2);  // Format to 2 decimal places
+  return result.toFixed(2); // Format to 2 decimal places
 }
 
-// Update the UI with the fetched and converted prices
-function updateDisplay() {
+// Render the prices and update display
+function render() {
   // Update Silver price (XAG)
   if (state.silver !== null) {
-    document.getElementById('silver-price').textContent = convert(state.silver);
-    document.getElementById('silver-high').textContent = convert(state.silverHigh);
-    document.getElementById('silver-low').textContent = convert(state.silverLow);
-    applyHighLowColor(document.getElementById('silver-price'), state.silver, state.silverHigh, state.silverLow);
+    el.silverPrice.textContent = convert(state.silver);
+    el.silverHigh.textContent = convert(state.silverHigh);
+    el.silverLow.textContent = convert(state.silverLow);
+    setPriceColor(el.silverPrice, state.silver, state.silverHigh, state.silverLow);
   }
 
   // Update Gold price (XAU)
   if (state.gold !== null) {
-    document.getElementById('gold-price').textContent = convert(state.gold);
-    document.getElementById('gold-high').textContent = convert(state.goldHigh);
-    document.getElementById('gold-low').textContent = convert(state.goldLow);
-    applyHighLowColor(document.getElementById('gold-price'), state.gold, state.goldHigh, state.goldLow);
+    el.goldPrice.textContent = convert(state.gold);
+    el.goldHigh.textContent = convert(state.goldHigh);
+    el.goldLow.textContent = convert(state.goldLow);
+    setPriceColor(el.goldPrice, state.gold, state.goldHigh, state.goldLow);
   }
 }
 
-// Apply color changes based on high/low prices
-function applyHighLowColor(priceElement, currentPrice, highPrice, lowPrice) {
-  priceElement.classList.remove('high', 'low', 'neutral');
+// Set price color (High, Low, Neutral)
+function setPriceColor(priceElement, currentPrice, highPrice, lowPrice) {
+  priceElement.classList.remove("high", "low", "neutral");
 
-  if (currentPrice === highPrice) {
-    priceElement.classList.add('high');
-  } else if (currentPrice === lowPrice) {
-    priceElement.classList.add('low');
-  } else {
-    priceElement.classList.add('neutral');
-  }
+  if (currentPrice === highPrice) priceElement.classList.add("high");
+  else if (currentPrice === lowPrice) priceElement.classList.add("low");
+  else priceElement.classList.add("neutral");
 }
 
-// Fetch prices from the API
-async function fetchPrices() {
-  const instrument = 'XAG/USD'; // or dynamically change this for XAU/USD
-  const url = `https://bullion-dashboard.vercel.app/api/quote?instrument=${instrument}`;
+// Fetch price data from Vercel proxy (API)
+async function fetchQuote(instrument) {
+  // Ensure the instrument is correctly encoded
+  const url = `/api/quote?instrument=${encodeURIComponent(instrument)}`;
 
   try {
-    const response = await fetch(url);
-    const data = await response.json();
-    const bid = data?.bboQuotes?.[0]?.bid;  // Adjust according to your API structure
-    const ask = data?.bboQuotes?.[0]?.ask;
+    const res = await fetch(url, { cache: "no-store" });
 
-    if (bid && ask) {
-      const mid = (bid + ask) / 2; // Calculate mid price
-
-      // Update state with the fetched prices
-      if (instrument === 'XAG/USD') {
-        state.silver = mid;
-        state.silverHigh = Math.max(state.silverHigh, mid);
-        state.silverLow = Math.min(state.silverLow, mid);
-      } else if (instrument === 'XAU/USD') {
-        state.gold = mid;
-        state.goldHigh = Math.max(state.goldHigh, mid);
-        state.goldLow = Math.min(state.goldLow, mid);
-      }
-
-      // Apply the selected unit conversion
-      updateDisplay();
-    } else {
-      console.error('Invalid bid/ask data');
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
+    return null;
   }
 }
 
-setInterval(fetchPrices, 1000); // Fetch prices every 1 second
+// Process the data and update state
+async function tick() {
+  try {
+    const [goldData, silverData] = await Promise.all([
+      fetchQuote("XAU/USD"),
+      fetchQuote("XAG/USD"),
+    ]);
+
+    if (!goldData || !silverData) throw new Error("Failed to fetch data");
+
+    // Process Gold Data (XAU/USD)
+    const goldMid = goldData.mid;
+    const goldBid = goldData.bid;
+    const goldAsk = goldData.ask;
+
+    // Process Silver Data (XAG/USD)
+    const silverMid = silverData.mid;
+    const silverBid = silverData.bid;
+    const silverAsk = silverData.ask;
+
+    // Update the state with the new prices
+    state.gold = goldMid;
+    state.silver = silverMid;
+
+    if (state.gold > state.goldHigh) state.goldHigh = state.gold;
+    if (state.gold < state.goldLow) state.goldLow = state.gold;
+
+    if (state.silver > state.silverHigh) state.silverHigh = state.silver;
+    if (state.silver < state.silverLow) state.silverLow = state.silver;
+
+    // Update metadata for bid/ask
+    el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)}`;
+    el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)}`;
+
+    // Update status and last updated time
+    el.status.textContent = "● LIVE DATA";
+    el.status.className = "status live";
+    el.lastUpdated.textContent = `Updated: ${new Date().toLocaleString()}`;
+
+    render();
+
+  } catch (e) {
+    console.error("Error processing data:", e);
+    el.status.textContent = "● OFFLINE (Error fetching data)";
+    el.status.className = "status offline";
+  } finally {
+    setTimeout(tick, 1000);
+  }
+}
+
+// Unit toggle should re-render immediately (no refetch needed)
+el.unit.addEventListener("change", render);
+
+// Start the process
+render();
+tick();
