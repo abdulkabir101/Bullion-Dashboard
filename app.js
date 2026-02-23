@@ -17,6 +17,7 @@ const state = {
 const el = {
   clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
+  lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
 
   goldPrice: document.getElementById("gold-price"),
