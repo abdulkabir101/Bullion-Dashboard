@@ -145,7 +145,7 @@ async function tick() {
     el.status.textContent = "● OFFLINE (Error fetching data)";
     el.status.className = "status offline";
   } finally {
-    setTimeout(tick, 500);
+    setTimeout(tick, 1000);
   }
 }
 
