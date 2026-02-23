@@ -4,7 +4,7 @@ const TOLA_PER_OZ = 2.6667;
 
 // State object to hold data
 const state = {
-  fx: 3.6725, // Example: Set default FX rate for AED
+  fx: 3.674, // Example: Set default FX rate for AED
   gold: null,
   silver: null,
   goldHigh: -Infinity,
@@ -17,7 +17,6 @@ const state = {
 const el = {
   clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
-  lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
 
   goldPrice: document.getElementById("gold-price"),
@@ -146,7 +145,7 @@ async function tick() {
     el.status.textContent = "● OFFLINE (Error fetching data)";
     el.status.className = "status offline";
   } finally {
-    setTimeout(tick, 1000);
+    setTimeout(tick, 500);
   }
 }
 
