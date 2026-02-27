@@ -2,25 +2,20 @@
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
-// State object to hold data (daily high/low & session high/low)
+// State object to hold data
 const state = {
-  fx: 3.6725, // Example: Set default FX rate for AED
+  fx: 3.674, // Example: Set default FX rate for AED
   gold: null,
   silver: null,
-  goldHigh: -Infinity, // Session high
-  goldLow: Infinity, // Session low
-  silverHigh: -Infinity, // Session high
-  silverLow: Infinity, // Session low
-  
-  // Track daily high/low
-  goldDailyHigh: -Infinity, 
-  goldDailyLow: Infinity, 
-  silverDailyHigh: -Infinity, 
-  silverDailyLow: Infinity,
+  goldHigh: -Infinity,
+  goldLow: Infinity,
+  silverHigh: -Infinity,
+  silverLow: Infinity,
 };
 
 // Elements
 const el = {
+  clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
   lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
@@ -35,6 +30,17 @@ const el = {
   silverLow: document.getElementById("silver-low"),
   silverMeta: document.getElementById("silver-meta"),
 };
+
+// Clock Update
+function pad2(n) { return String(n).padStart(2, "0"); }
+
+function updateClock() {
+  const d = new Date();
+  el.clock.textContent = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
 
 // Unit Conversion
 function convert(value) {
@@ -57,7 +63,6 @@ function render() {
     el.silverPrice.textContent = convert(state.silver);
     el.silverHigh.textContent = convert(state.silverHigh);
     el.silverLow.textContent = convert(state.silverLow);
-    el.silverMeta.textContent = `Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
     setPriceColor(el.silverPrice, state.silver, state.silverHigh, state.silverLow);
   }
 
@@ -66,7 +71,6 @@ function render() {
     el.goldPrice.textContent = convert(state.gold);
     el.goldHigh.textContent = convert(state.goldHigh);
     el.goldLow.textContent = convert(state.goldLow);
-    el.goldMeta.textContent = `Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
     setPriceColor(el.goldPrice, state.gold, state.goldHigh, state.goldLow);
   }
 }
@@ -120,19 +124,11 @@ async function tick() {
     state.gold = goldMid;
     state.silver = silverMid;
 
-    // Track session high/low
     if (state.gold > state.goldHigh) state.goldHigh = state.gold;
     if (state.gold < state.goldLow) state.goldLow = state.gold;
 
     if (state.silver > state.silverHigh) state.silverHigh = state.silver;
     if (state.silver < state.silverLow) state.silverLow = state.silver;
-
-    // Track daily high/low
-    if (state.gold > state.goldDailyHigh) state.goldDailyHigh = state.gold;
-    if (state.gold < state.goldDailyLow) state.goldDailyLow = state.gold;
-
-    if (state.silver > state.silverDailyHigh) state.silverDailyHigh = state.silver;
-    if (state.silver < state.silverDailyLow) state.silverDailyLow = state.silver;
 
     // Update metadata for bid/ask
     el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)}`;
@@ -150,7 +146,7 @@ async function tick() {
     el.status.textContent = "● OFFLINE (Error fetching data)";
     el.status.className = "status offline";
   } finally {
-    setTimeout(tick, 1000); // Refetch every second
+    setTimeout(tick, 1000);
   }
 }
 
