@@ -9,28 +9,41 @@
 <body>
 
 <div class="container">
+
   <div class="header">
     <div>
-      <h1>commodities</h1>
+      <h1>Commodities</h1>
       <div class="subline">
         <span id="connection-status" class="status neutral">● CONNECTING</span>
         <span id="last-updated" class="last-updated">—</span>
       </div>
     </div>
+    <div id="clock" class="clock">00:00:00</div>
   </div>
 
   <div class="controls">
-    <select id="unit" aria-label="Unit">
+    <select id="currency">
+      <option value="USD">Currency: USD</option>
+      <option value="AED">Currency: AED</option>
+    </select>
+
+    <select id="unit" onchange="updateDisplay()">
       <option value="oz">Unit: Ounce (oz)</option>
       <option value="g">Unit: Gram (g)</option>
       <option value="tola">Unit: Tola</option>
     </select>
+
+    <div class="fx">
+      <span class="fx-label">USD→AED</span>
+      <span id="fx-rate" class="fx-val">—</span>
+    </div>
   </div>
 
   <div class="grid">
+
     <div class="card">
       <div class="row">
-        <span class="label">Gold Spot (XAU/USD mid)</span>
+        <span class="label">Gold Spot (XAU)</span>
         <span id="gold-meta" class="meta">—</span>
       </div>
       <div id="gold-price" class="price neutral">---</div>
@@ -48,7 +61,7 @@
 
     <div class="card silver">
       <div class="row">
-        <span class="label">Silver Spot (XAG/USD mid)</span>
+        <span class="label">Silver Spot (XAG)</span>
         <span id="silver-meta" class="meta">—</span>
       </div>
       <div id="silver-price" class="price neutral">---</div>
@@ -63,9 +76,11 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
 <script src="app.js"></script>
+
 </body>
 </html>
