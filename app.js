@@ -19,7 +19,6 @@ const state = {
 const el = {
   clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
-  lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
   currency: document.getElementById("currency"), // Currency dropdown element
 
@@ -155,13 +154,12 @@ async function tick() {
     if (state.silver < state.silverDailyLow) state.silverDailyLow = state.silver;
 
     // Update metadata for bid/ask
-    el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)}`;
-    el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)}`;
+    el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
+    el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)} | Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
 
-    // Update status and last updated time
+    // Update status and last updated time (REMOVED)
     el.status.textContent = "● LIVE DATA";
     el.status.className = "status live";
-    el.lastUpdated.textContent = `Updated: ${new Date().toLocaleString()}`;
 
     render();
 
