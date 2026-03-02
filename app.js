@@ -7,12 +7,13 @@ const state = {
   fx: 3.674, // Example: Set default FX rate for AED
   gold: null,
   silver: null,
-  
+
   // Daily high and low (persisting for the whole day)
   goldDailyHigh: -Infinity, 
   goldDailyLow: Infinity, 
   silverDailyHigh: -Infinity, 
   silverDailyLow: Infinity,
+
   // Bid and Ask prices
   goldBid: null,
   goldAsk: null,
@@ -24,7 +25,6 @@ const state = {
 const el = {
   clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
-  lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
   currency: document.getElementById("currency"), // Currency dropdown element
 
@@ -152,7 +152,7 @@ async function tick() {
     state.gold = goldMid;
     state.silver = silverMid;
 
-    // Track daily high/low
+    // Track daily high/low for the day
     if (state.gold > state.goldDailyHigh) state.goldDailyHigh = state.gold;
     if (state.gold < state.goldDailyLow) state.goldDailyLow = state.gold;
 
@@ -170,7 +170,7 @@ async function tick() {
     el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
     el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)} | Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
 
-    // Update status and last updated time (REMOVED)
+    // Update status
     el.status.textContent = "● LIVE DATA";
     el.status.className = "status live";
 
