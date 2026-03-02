@@ -86,16 +86,25 @@ function setPriceColor(priceElement, currentPrice, highPrice, lowPrice) {
 
 // Fetch price data from Vercel proxy (API)
 async function fetchQuote(instrument) {
-  // Ensure the instrument is correctly encoded
   const url = `/api/quote?instrument=${encodeURIComponent(instrument)}`;
 
   try {
     const res = await fetch(url, { cache: "no-store" });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    if (!res.ok) {
+      // Handle non-200 status codes
+      console.error(`Error fetching data: HTTP ${res.status}`);
+      el.status.textContent = "● ERROR (Failed to fetch data)";
+      el.status.className = "status error";
+      return null;
+    }
+    
+    const data = await res.json();
+    return data;
   } catch (error) {
     console.error("Error fetching data:", error);
+    el.status.textContent = "● OFFLINE (Error fetching data)";
+    el.status.className = "status offline";
     return null;
   }
 }
