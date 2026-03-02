@@ -2,23 +2,15 @@
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
-// State object to hold data (daily high/low)
+// State object to hold data
 const state = {
   fx: 3.674, // Example: Set default FX rate for AED
   gold: null,
   silver: null,
-
-  // Daily high and low (persisting for the whole day)
-  goldDailyHigh: -Infinity, 
-  goldDailyLow: Infinity, 
-  silverDailyHigh: -Infinity, 
-  silverDailyLow: Infinity,
-
-  // Bid and Ask prices (to be displayed in the bottom section)
-  goldBid: null,
-  goldAsk: null,
-  silverBid: null,
-  silverAsk: null,
+  goldHigh: -Infinity,
+  goldLow: Infinity,
+  silverHigh: -Infinity,
+  silverLow: Infinity,
 };
 
 // Elements
@@ -59,7 +51,7 @@ function convert(value) {
   else if (el.unit.value === "tola") result = value / TOLA_PER_OZ;
 
   // If currency is AED, convert using the current FX rate
-  if (el.currency.value === "AED") result = result * state.fx;
+  if (currency.value === "AED") result = result * state.fx;
 
   return result.toFixed(2); // Format to 2 decimal places
 }
@@ -69,19 +61,17 @@ function render() {
   // Update Silver price (XAG)
   if (state.silver !== null) {
     el.silverPrice.textContent = convert(state.silver);
-    el.silverHigh.textContent = convert(state.silverDailyHigh);
-    el.silverLow.textContent = convert(state.silverDailyLow);
-    el.silverMeta.textContent = `Bid: ${convert(state.silverBid)} | Ask: ${convert(state.silverAsk)}`;
-    setPriceColor(el.silverPrice, state.silver, state.silverDailyHigh, state.silverDailyLow);
+    el.silverHigh.textContent = convert(state.silverHigh);
+    el.silverLow.textContent = convert(state.silverLow);
+    setPriceColor(el.silverPrice, state.silver, state.silverHigh, state.silverLow);
   }
 
   // Update Gold price (XAU)
   if (state.gold !== null) {
     el.goldPrice.textContent = convert(state.gold);
-    el.goldHigh.textContent = convert(state.goldDailyHigh);
-    el.goldLow.textContent = convert(state.goldDailyLow);
-    el.goldMeta.textContent = `Bid: ${convert(state.goldBid)} | Ask: ${convert(state.goldAsk)}`;
-    setPriceColor(el.goldPrice, state.gold, state.goldDailyHigh, state.goldDailyLow);
+    el.goldHigh.textContent = convert(state.goldHigh);
+    el.goldLow.textContent = convert(state.goldLow);
+    setPriceColor(el.goldPrice, state.gold, state.goldHigh, state.goldLow);
   }
 }
 
@@ -96,6 +86,7 @@ function setPriceColor(priceElement, currentPrice, highPrice, lowPrice) {
 
 // Fetch price data from Vercel proxy (API)
 async function fetchQuote(instrument) {
+  // Ensure the instrument is correctly encoded
   const url = `/api/quote?instrument=${encodeURIComponent(instrument)}`;
 
   try {
@@ -109,27 +100,8 @@ async function fetchQuote(instrument) {
   }
 }
 
-// Reset daily high/low at midnight (optional)
-function resetDailyHighLowIfNewDay() {
-  const now = new Date();
-  const lastCheckedDate = localStorage.getItem('lastCheckedDate');
-
-  if (lastCheckedDate !== `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`) {
-    // Reset daily high/low if it's a new day
-    state.goldDailyHigh = -Infinity;
-    state.goldDailyLow = Infinity;
-    state.silverDailyHigh = -Infinity;
-    state.silverDailyLow = Infinity;
-
-    // Store the current date in localStorage
-    localStorage.setItem('lastCheckedDate', `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`);
-  }
-}
-
 // Process the data and update state
 async function tick() {
-  resetDailyHighLowIfNewDay(); // Reset if it's a new day
-
   try {
     const [goldData, silverData] = await Promise.all([
       fetchQuote("XAU/USD"),
@@ -152,19 +124,12 @@ async function tick() {
     state.gold = goldMid;
     state.silver = silverMid;
 
-    // Track daily high/low for the day
-    if (state.gold > state.goldDailyHigh) state.goldDailyHigh = state.gold;
-    if (state.gold < state.goldDailyLow) state.goldDailyLow = state.gold;
+    // Track high/low prices
+    if (state.gold > state.goldHigh) state.goldHigh = state.gold;
+    if (state.gold < state.goldLow) state.goldLow = state.gold;
 
-    if (state.silver > state.silverDailyHigh) state.silverDailyHigh = state.silver;
-    if (state.silver < state.silverDailyLow) state.silverDailyLow = state.silver;
-
-    // Update bid/ask data
-    state.goldBid = goldBid;
-    state.goldAsk = goldAsk;
-
-    state.silverBid = silverBid;
-    state.silverAsk = silverAsk;
+    if (state.silver > state.silverHigh) state.silverHigh = state.silver;
+    if (state.silver < state.silverLow) state.silverLow = state.silver;
 
     // Update metadata for bid/ask
     el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)}`;
