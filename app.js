@@ -13,12 +13,18 @@ const state = {
   goldDailyLow: Infinity, 
   silverDailyHigh: -Infinity, 
   silverDailyLow: Infinity,
+  // Bid and Ask prices
+  goldBid: null,
+  goldAsk: null,
+  silverBid: null,
+  silverAsk: null,
 };
 
 // Elements
 const el = {
   clock: document.getElementById("clock"),
   status: document.getElementById("connection-status"),
+  lastUpdated: document.getElementById("last-updated"),
   unit: document.getElementById("unit"),
   currency: document.getElementById("currency"), // Currency dropdown element
 
@@ -65,7 +71,7 @@ function render() {
     el.silverPrice.textContent = convert(state.silver);
     el.silverHigh.textContent = convert(state.silverDailyHigh);
     el.silverLow.textContent = convert(state.silverDailyLow);
-    el.silverMeta.textContent = `Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
+    el.silverMeta.textContent = `Bid: ${convert(state.silverBid)} | Ask: ${convert(state.silverAsk)} | Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
     setPriceColor(el.silverPrice, state.silver, state.silverDailyHigh, state.silverDailyLow);
   }
 
@@ -74,7 +80,7 @@ function render() {
     el.goldPrice.textContent = convert(state.gold);
     el.goldHigh.textContent = convert(state.goldDailyHigh);
     el.goldLow.textContent = convert(state.goldDailyLow);
-    el.goldMeta.textContent = `Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
+    el.goldMeta.textContent = `Bid: ${convert(state.goldBid)} | Ask: ${convert(state.goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
     setPriceColor(el.goldPrice, state.gold, state.goldDailyHigh, state.goldDailyLow);
   }
 }
@@ -152,6 +158,13 @@ async function tick() {
 
     if (state.silver > state.silverDailyHigh) state.silverDailyHigh = state.silver;
     if (state.silver < state.silverDailyLow) state.silverDailyLow = state.silver;
+
+    // Update bid/ask data
+    state.goldBid = goldBid;
+    state.goldAsk = goldAsk;
+
+    state.silverBid = silverBid;
+    state.silverAsk = silverAsk;
 
     // Update metadata for bid/ask
     el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
