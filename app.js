@@ -2,7 +2,7 @@
 const GRAMS_PER_OZ = 31.1035;
 const TOLA_PER_OZ = 2.6667;
 
-// State object to hold data (daily high/low & session high/low)
+// State object to hold data (daily high/low)
 const state = {
   fx: 3.674, // Example: Set default FX rate for AED
   gold: null,
@@ -14,7 +14,7 @@ const state = {
   silverDailyHigh: -Infinity, 
   silverDailyLow: Infinity,
 
-  // Bid and Ask prices
+  // Bid and Ask prices (to be displayed in the bottom section)
   goldBid: null,
   goldAsk: null,
   silverBid: null,
@@ -71,7 +71,7 @@ function render() {
     el.silverPrice.textContent = convert(state.silver);
     el.silverHigh.textContent = convert(state.silverDailyHigh);
     el.silverLow.textContent = convert(state.silverDailyLow);
-    el.silverMeta.textContent = `Bid: ${convert(state.silverBid)} | Ask: ${convert(state.silverAsk)} | Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
+    el.silverMeta.textContent = `Bid: ${convert(state.silverBid)} | Ask: ${convert(state.silverAsk)}`;
     setPriceColor(el.silverPrice, state.silver, state.silverDailyHigh, state.silverDailyLow);
   }
 
@@ -80,7 +80,7 @@ function render() {
     el.goldPrice.textContent = convert(state.gold);
     el.goldHigh.textContent = convert(state.goldDailyHigh);
     el.goldLow.textContent = convert(state.goldDailyLow);
-    el.goldMeta.textContent = `Bid: ${convert(state.goldBid)} | Ask: ${convert(state.goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
+    el.goldMeta.textContent = `Bid: ${convert(state.goldBid)} | Ask: ${convert(state.goldAsk)}`;
     setPriceColor(el.goldPrice, state.gold, state.goldDailyHigh, state.goldDailyLow);
   }
 }
@@ -167,8 +167,8 @@ async function tick() {
     state.silverAsk = silverAsk;
 
     // Update metadata for bid/ask
-    el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)} | Daily High: ${convert(state.goldDailyHigh)} | Daily Low: ${convert(state.goldDailyLow)}`;
-    el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)} | Daily High: ${convert(state.silverDailyHigh)} | Daily Low: ${convert(state.silverDailyLow)}`;
+    el.goldMeta.textContent = `Bid: ${convert(goldBid)} | Ask: ${convert(goldAsk)}`;
+    el.silverMeta.textContent = `Bid: ${convert(silverBid)} | Ask: ${convert(silverAsk)}`;
 
     // Update status
     el.status.textContent = "● LIVE DATA";
